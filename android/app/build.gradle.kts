@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.alebozek.dotted_app"
+    namespace = "com.example.dotted_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 

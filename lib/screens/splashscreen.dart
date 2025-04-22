@@ -1,5 +1,7 @@
+import 'package:dotted_app/custom/login_provider_btn.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
+import 'package:dotted_app/custom/google_sign_in.dart';
 import 'package:dotted_app/custom/button.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -14,6 +16,7 @@ class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
+  String err = "";
 
   @override
   void initState() {
@@ -82,17 +85,34 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      LoginScreenBtn(
-                        text: "Login",
-                        onPressed: () {
-                          print("potatoes");
+                      Text(err, style: TextStyle(color: Colors.red)),
+                      ProviderLoginBtn(
+                        text: "Sign in",
+                        img: Image.asset('assets/google.png'),
+                        onPressed: () async {
+                          try {
+                            final user =
+                                await GoogleAuthService().signInWithGoogle();
+                            print(user.toString());
+                          } catch (e) {
+                            setState(() {
+                              err = e.toString();
+                            });
+                          }
                         },
                       ),
                       SizedBox(height: 12),
-                      LoginScreenBtn(
+                      DottedMainBtn(
+                        text: "Login",
+                        onPressed: () {
+                          Navigator.pushNamed(context, 'login_screen');
+                        },
+                      ),
+                      SizedBox(height: 12),
+                      DottedMainBtn(
                         text: "Register",
                         onPressed: () {
-                          print("potatoes");
+                          Navigator.pushNamed(context, 'registration_screen');
                         },
                       ),
                     ],

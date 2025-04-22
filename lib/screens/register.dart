@@ -18,7 +18,7 @@ class _RegisterState extends State<Register> {
   void dispose() {
     emailController.dispose();
     passController.dispose();
-    super.dispose(); // ✅ important!
+    super.dispose();
   }
 
   @override
@@ -81,7 +81,7 @@ class _RegisterState extends State<Register> {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // Go back to login
+                  Navigator.pop(context);
                 },
                 child: const Text("Already have an account? Login"),
               ),

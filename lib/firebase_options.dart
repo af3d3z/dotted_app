@@ -42,7 +42,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyCniVj58zfWFyW5tOcs82Bt5Wq9v9nRVrY',
-    appId: '1:594990381370:web:d831f6ebc450e15b73b803',
+    appId: '1:594990381370:web:0c327ae4cceca9fb73b803',
     messagingSenderId: '594990381370',
     projectId: 'dotted-72221',
     authDomain: 'dotted-72221.firebaseapp.com',
@@ -63,6 +63,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '594990381370',
     projectId: 'dotted-72221',
     storageBucket: 'dotted-72221.firebasestorage.app',
+    androidClientId: '594990381370-f6vph77rkmbbvpg0rnt90fbp8j45mp1d.apps.googleusercontent.com',
     iosClientId: '594990381370-pdinsmu5kpbra1h4lnj0s7kfp4ut06l7.apps.googleusercontent.com',
     iosBundleId: 'com.example.dottedApp',
   );
@@ -73,16 +74,18 @@ class DefaultFirebaseOptions {
     messagingSenderId: '594990381370',
     projectId: 'dotted-72221',
     storageBucket: 'dotted-72221.firebasestorage.app',
+    androidClientId: '594990381370-f6vph77rkmbbvpg0rnt90fbp8j45mp1d.apps.googleusercontent.com',
     iosClientId: '594990381370-pdinsmu5kpbra1h4lnj0s7kfp4ut06l7.apps.googleusercontent.com',
     iosBundleId: 'com.example.dottedApp',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyCniVj58zfWFyW5tOcs82Bt5Wq9v9nRVrY',
-    appId: '1:594990381370:web:0c327ae4cceca9fb73b803',
+    appId: '1:594990381370:web:b47367dd9b8989b973b803',
     messagingSenderId: '594990381370',
     projectId: 'dotted-72221',
     authDomain: 'dotted-72221.firebaseapp.com',
     storageBucket: 'dotted-72221.firebasestorage.app',
   );
+
 }

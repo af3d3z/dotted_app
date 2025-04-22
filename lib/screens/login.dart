@@ -1,8 +1,7 @@
-import 'dart:convert';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:dotted_app/custom/button.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -26,6 +25,14 @@ class _LoginState extends State<Login> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: BackButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, 'splash_screen');
+                  },
+                ),
+              ),
               const SizedBox(height: 40),
               const Text(
                 "Login",
@@ -35,7 +42,7 @@ class _LoginState extends State<Login> {
               const SizedBox(height: 40),
               TextField(
                 decoration: const InputDecoration(
-                  labelText: 'Email',
+                  labelText: 'Email/Username',
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.emailAddress,
@@ -55,7 +62,8 @@ class _LoginState extends State<Login> {
                 },
               ),
               const SizedBox(height: 30),
-              ElevatedButton(
+              DottedMainBtn(
+                text: "Login",
                 onPressed: () async {
                   try {
                     final userCredential = await _auth
@@ -87,13 +95,13 @@ class _LoginState extends State<Login> {
                     );
                   }
                 },
-                child: const Text("Login"),
               ),
-              TextButton(
+              SizedBox(height: 5),
+              DottedMainBtn(
+                text: "Register",
                 onPressed: () {
                   Navigator.pushNamed(context, 'registration_screen');
                 },
-                child: const Text("Register"),
               ),
             ],
           ),

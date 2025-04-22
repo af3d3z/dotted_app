@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 
 // Botones para la pantalla de inicio
-class LoginScreenBtn extends StatelessWidget {
+class DottedMainBtn extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
 
-  const LoginScreenBtn({
-    super.key,
-    required this.text,
-    required this.onPressed,
-  });
+  const DottedMainBtn({super.key, required this.text, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
