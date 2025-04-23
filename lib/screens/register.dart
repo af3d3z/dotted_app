@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:crypto/crypto.dart';
+import 'package:http/http.dart' as http;
 import 'package:dotted_app/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:dotted_app/custom/button.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:dotted_app/custom/global.dart';
 
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);
@@ -15,6 +21,61 @@ class _RegisterState extends State<Register> {
   final emailController = TextEditingController();
   final passController = TextEditingController();
   final _auth = FirebaseAuth.instance;
+  File? _image;
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState((){
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<bool> registerUser() async {
+    bool everythingFine = false;
+    // first we hash the password using sha512 <3
+    var bytesToHash = utf8.encode(passController.text);
+    var hashedPass = sha512.convert(bytesToHash);
+
+    final compressedImg = await compressImage(_image);
+
+    try{
+      final response = await http.post(
+        Uri.parse(API_URL + "users"),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'email': emailController.text,
+          'username': usernameController.text,
+          'pass': hashedPass.toString(),
+          'img': compressedImg
+        })
+      );
+
+      if (response.statusCode == 201){
+        final responseData = jsonDecode(response.body);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("${responseData['msg']}"),
+          ),
+        );
+        everythingFine = true;
+      }
+    }catch(e){
+      print(e);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Registration failed: ${e.toString()}'),
+        ),
+      );
+    }
+
+    return everythingFine;
+  }
 
   @override
   void dispose() {
@@ -44,6 +105,7 @@ class _RegisterState extends State<Register> {
                 controller: usernameController,
                 decoration: const InputDecoration(
                   labelText: 'Username',
+                  border: OutlineInputBorder(),
                   focusColor: Colors.black,
                 ),
               ),
@@ -68,26 +130,32 @@ class _RegisterState extends State<Register> {
                 ),
               ),
               const SizedBox(height: 30),
+              DottedMainBtn(text: "Select your profile picture", onPressed: _pickImage),
+              const SizedBox(height: 30),
               DottedMainBtn(
                 onPressed: () async {
                   // first ask the backend and then register w google
-                  try {
-                    final newUser = await _auth.createUserWithEmailAndPassword(
-                      email: emailController.text,
-                      password: passController.text,
-                    );
-                    if (newUser.user != null) {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const Login()),
+                  bool validUser = await registerUser();
+
+                  if (validUser){
+                    try {
+                      final newUser = await _auth.createUserWithEmailAndPassword(
+                        email: emailController.text,
+                        password: passController.text,
                       );
-                    }
+                      if (newUser.user != null) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => const Login()),
+                        );
+                      }
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Registration failed: ${e.toString()}'),
                       ),
                     );
+                  }
                   }
                 },
                 text: "Register",
@@ -97,7 +165,7 @@ class _RegisterState extends State<Register> {
                 onPressed: () {
                   Navigator.pushNamed(context, 'login_screen');
                 },
-                text: "Already have an account? Login",
+                text: "Already have an account?",
               ),
             ],
           ),
