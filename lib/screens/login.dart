@@ -44,6 +44,7 @@ class _LoginState extends State<Login> {
                 decoration: const InputDecoration(
                   labelText: 'Email/Username',
                   border: OutlineInputBorder(),
+                  focusColor: Colors.black,
                 ),
                 keyboardType: TextInputType.emailAddress,
                 onChanged: (value) {
@@ -55,6 +56,7 @@ class _LoginState extends State<Login> {
                 decoration: const InputDecoration(
                   labelText: 'Password',
                   border: OutlineInputBorder(),
+                  focusColor: Colors.black,
                 ),
                 obscureText: true,
                 onChanged: (value) {

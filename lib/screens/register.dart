@@ -1,6 +1,7 @@
 import 'package:dotted_app/screens/login.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:dotted_app/custom/button.dart';
 
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);
@@ -10,6 +11,7 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
+  final usernameController = TextEditingController();
   final emailController = TextEditingController();
   final passController = TextEditingController();
   final _auth = FirebaseAuth.instance;
@@ -39,11 +41,20 @@ class _RegisterState extends State<Register> {
               ),
               const SizedBox(height: 40),
               TextField(
+                controller: usernameController,
+                decoration: const InputDecoration(
+                  labelText: 'Username',
+                  focusColor: Colors.black,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(),
+                  focusColor: Colors.black,
                 ),
               ),
               const SizedBox(height: 20),
@@ -53,11 +64,13 @@ class _RegisterState extends State<Register> {
                 decoration: const InputDecoration(
                   labelText: 'Password',
                   border: OutlineInputBorder(),
+                  focusColor: Colors.black,
                 ),
               ),
               const SizedBox(height: 30),
-              ElevatedButton(
+              DottedMainBtn(
                 onPressed: () async {
+                  // first ask the backend and then register w google
                   try {
                     final newUser = await _auth.createUserWithEmailAndPassword(
                       email: emailController.text,
@@ -77,13 +90,14 @@ class _RegisterState extends State<Register> {
                     );
                   }
                 },
-                child: const Text("Register"),
+                text: "Register",
               ),
-              TextButton(
+              SizedBox(height: 12),
+              DottedMainBtn(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pushNamed(context, 'login_screen');
                 },
-                child: const Text("Already have an account? Login"),
+                text: "Already have an account? Login",
               ),
             ],
           ),
