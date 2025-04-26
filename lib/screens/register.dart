@@ -10,7 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dotted_app/custom/global.dart';
 
 class Register extends StatefulWidget {
-  const Register({Key? key}) : super(key: key);
+  const Register({super.key});
 
   @override
   State<Register> createState() => _RegisterState();
@@ -22,19 +22,23 @@ class _RegisterState extends State<Register> {
   final passController = TextEditingController();
   final _auth = FirebaseAuth.instance;
   File? _image;
+  bool gotPhoto = false;
 
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
     if (pickedFile != null) {
-      setState((){
+      setState(() {
         _image = File(pickedFile.path);
+        gotPhoto = true;
       });
     }
   }
 
-  Future<bool> registerUser() async {
+  Future<void> registerUser() async {
     bool everythingFine = false;
     // first we hash the password using sha512 <3
     var bytesToHash = utf8.encode(passController.text);
@@ -42,39 +46,52 @@ class _RegisterState extends State<Register> {
 
     final compressedImg = await compressImage(_image);
 
-    try{
+    try {
       final response = await http.post(
-        Uri.parse(API_URL + "users"),
-        headers: <String, String>{
-          'Content-Type': 'application/json',
-        },
+        Uri.parse("${API_URL}users"),
+        headers: <String, String>{'Content-Type': 'application/json'},
         body: jsonEncode(<String, dynamic>{
           'email': emailController.text,
           'username': usernameController.text,
           'pass': hashedPass.toString(),
-          'img': compressedImg
-        })
+          'img': compressedImg,
+        }),
       );
 
-      if (response.statusCode == 201){
+      if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("${responseData['msg']}"),
-          ),
-        );
+        print(responseData.runtimeType); // Should say: _JsonMap
+        print(responseData);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(responseData['msg'])));
         everythingFine = true;
       }
-    }catch(e){
+    } catch (e) {
       print(e);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Registration failed: ${e.toString()}'),
-        ),
+        SnackBar(content: Text('Registration failed: ${e.toString()}')),
       );
     }
 
-    return everythingFine;
+    if (everythingFine) {
+      try {
+        final newUser = await _auth.createUserWithEmailAndPassword(
+          email: emailController.text,
+          password: passController.text,
+        );
+        if (newUser.user != null) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const Login()),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Registration failed: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   @override
@@ -94,6 +111,14 @@ class _RegisterState extends State<Register> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Align(
+                alignment: Alignment.topLeft,
+                child: BackButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, 'splash_screen');
+                  },
+                ),
+              ),
               const SizedBox(height: 40),
               const Text(
                 "Register",
@@ -129,34 +154,27 @@ class _RegisterState extends State<Register> {
                   focusColor: Colors.black,
                 ),
               ),
-              const SizedBox(height: 30),
-              DottedMainBtn(text: "Select your profile picture", onPressed: _pickImage),
+              const SizedBox(height: 20),
+              Visibility(
+                visible: gotPhoto,
+                child: Row(
+                  children: [
+                    Icon(Icons.verified, color: Colors.black),
+                    SizedBox(width: 5),
+                    Text("Image uploaded!"),
+                  ],
+                  mainAxisAlignment: MainAxisAlignment.center,
+                ),
+              ),
+              const SizedBox(height: 10),
+              DottedMainBtn(
+                text: "Select your profile picture",
+                onPressed: _pickImage,
+              ),
               const SizedBox(height: 30),
               DottedMainBtn(
                 onPressed: () async {
-                  // first ask the backend and then register w google
-                  bool validUser = await registerUser();
-
-                  if (validUser){
-                    try {
-                      final newUser = await _auth.createUserWithEmailAndPassword(
-                        email: emailController.text,
-                        password: passController.text,
-                      );
-                      if (newUser.user != null) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const Login()),
-                        );
-                      }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Registration failed: ${e.toString()}'),
-                      ),
-                    );
-                  }
-                  }
+                  await registerUser();
                 },
                 text: "Register",
               ),

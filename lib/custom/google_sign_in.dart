@@ -10,7 +10,7 @@ class GoogleAuthService {
     try {
       UserCredential userCredentials;
       final GoogleSignInAuthentication googleAuth;
-      final credential;
+      final OAuthCredential credential;
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         throw FirebaseAuthException(

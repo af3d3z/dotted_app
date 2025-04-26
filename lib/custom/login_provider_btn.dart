@@ -22,17 +22,17 @@ class ProviderLoginBtn extends StatelessWidget {
         foregroundColor: Colors.white,
         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        maximumSize: Size(190, 40),
+        maximumSize: Size(200, 50),
       ),
       child: Align(
         alignment: Alignment.center,
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image(image: img.image, height: 24, width: 24),
             SizedBox(width: 5),
             Text(text, style: TextStyle(fontSize: 16)),
           ],
-          mainAxisAlignment: MainAxisAlignment.center,
         ),
       ),
     );

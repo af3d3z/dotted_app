@@ -4,6 +4,8 @@ import 'package:dotted_app/screens/homescreen.dart';
 import 'package:dotted_app/screens/splashscreen.dart';
 
 class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(

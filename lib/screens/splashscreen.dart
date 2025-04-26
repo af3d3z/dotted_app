@@ -1,5 +1,4 @@
 import 'package:dotted_app/custom/login_provider_btn.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_app/custom/google_sign_in.dart';
 import 'package:dotted_app/custom/button.dart';
