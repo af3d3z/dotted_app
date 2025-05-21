@@ -1,4 +1,5 @@
 import 'package:dotted_app/custom/login_provider_btn.dart';
+import 'package:dotted_app/screens/google_signin.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_app/custom/google_sign_in.dart';
 import 'package:dotted_app/custom/button.dart';
@@ -93,6 +94,15 @@ class _SplashScreenState extends State<SplashScreen>
                             final user =
                                 await GoogleAuthService().signInWithGoogle();
                             print(user.toString());
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => CompleteProfilePage(
+                                      email: user.user!.email!,
+                                    ),
+                              ),
+                            );
                           } catch (e) {
                             setState(() {
                               err = e.toString();

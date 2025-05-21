@@ -1,3 +1,4 @@
+import 'package:dotted_app/custom/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -79,9 +80,7 @@ class _LoginState extends State<Login> {
                     if (user != null) {
                       final idToken = await user.getIdToken(true);
                       String token = "Bearer $idToken";
-                      var apiUrl = Uri.parse(
-                        "http://localhost:8000/store-user-data",
-                      );
+                      var apiUrl = Uri.parse("${API_URL}api/store-user-data");
 
                       final response = await http.get(
                         apiUrl,

@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:crypto/crypto.dart';
-import 'package:http/http.dart' as http;
-import 'package:dotted_app/screens/login.dart';
+
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:dotted_app/custom/button.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'package:dotted_app/custom/button.dart';
 import 'package:dotted_app/custom/global.dart';
+import 'package:dotted_app/screens/login_screen.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -17,15 +18,16 @@ class Register extends StatefulWidget {
 }
 
 class _RegisterState extends State<Register> {
-  final usernameController = TextEditingController();
-  final emailController = TextEditingController();
-  final passController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passController = TextEditingController();
   final _auth = FirebaseAuth.instance;
+
   File? _image;
-  bool gotPhoto = false;
+  bool _gotPhoto = false;
 
   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
+    final picker = ImagePicker();
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
     );
@@ -33,71 +35,63 @@ class _RegisterState extends State<Register> {
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
-        gotPhoto = true;
+        _gotPhoto = true;
       });
     }
   }
 
-  Future<void> registerUser() async {
-    bool everythingFine = false;
-    // first we hash the password using sha512 <3
-    var bytesToHash = utf8.encode(passController.text);
-    var hashedPass = sha512.convert(bytesToHash);
-
-    final compressedImg = await compressImage(_image);
-
+  Future<void> _registerUser() async {
     try {
+      // Firebase Auth registration
+      final userCredential = await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passController.text.trim(),
+      );
+
+      final firebaseUser = userCredential.user;
+      if (firebaseUser == null) throw Exception("Firebase user is null.");
+
+      final compressedImg = await compressImage(_image);
+
+      // Send to API
       final response = await http.post(
-        Uri.parse("${API_URL}users"),
-        headers: <String, String>{'Content-Type': 'application/json'},
-        body: jsonEncode(<String, dynamic>{
-          'email': emailController.text,
-          'username': usernameController.text,
-          'pass': hashedPass.toString(),
+        Uri.parse("${API_URL}api/users"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'id': firebaseUser.uid,
+          'email': _emailController.text.trim(),
+          'username': _usernameController.text.trim(),
           'img': compressedImg,
         }),
       );
 
       if (response.statusCode == 201) {
         final responseData = jsonDecode(response.body);
-        print(responseData.runtimeType); // Should say: _JsonMap
-        print(responseData);
-        ScaffoldMessenger.of(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['msg'] ?? "Registered successfully"),
+          ),
+        );
+        Navigator.pushReplacement(
           context,
-        ).showSnackBar(SnackBar(content: Text(responseData['msg'])));
-        everythingFine = true;
+          MaterialPageRoute(builder: (_) => const Login()),
+        );
+      } else {
+        throw Exception("API error: ${response.statusCode} - ${response.body}");
       }
     } catch (e) {
-      print(e);
+      print("Registration failed: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Registration failed: ${e.toString()}')),
       );
-    }
-
-    if (everythingFine) {
-      try {
-        final newUser = await _auth.createUserWithEmailAndPassword(
-          email: emailController.text,
-          password: passController.text,
-        );
-        if (newUser.user != null) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const Login()),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Registration failed: ${e.toString()}')),
-        );
-      }
     }
   }
 
   @override
   void dispose() {
-    emailController.dispose();
-    passController.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passController.dispose();
     super.dispose();
   }
 
@@ -114,9 +108,8 @@ class _RegisterState extends State<Register> {
               Align(
                 alignment: Alignment.topLeft,
                 child: BackButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, 'splash_screen');
-                  },
+                  onPressed:
+                      () => Navigator.pushNamed(context, 'splash_screen'),
                 ),
               ),
               const SizedBox(height: 40),
@@ -127,63 +120,53 @@ class _RegisterState extends State<Register> {
               ),
               const SizedBox(height: 40),
               TextField(
-                controller: usernameController,
+                controller: _usernameController,
                 decoration: const InputDecoration(
                   labelText: 'Username',
                   border: OutlineInputBorder(),
-                  focusColor: Colors.black,
                 ),
               ),
               const SizedBox(height: 20),
               TextField(
-                controller: emailController,
+                controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(),
-                  focusColor: Colors.black,
                 ),
               ),
               const SizedBox(height: 20),
               TextField(
-                controller: passController,
+                controller: _passController,
                 obscureText: true,
                 decoration: const InputDecoration(
                   labelText: 'Password',
                   border: OutlineInputBorder(),
-                  focusColor: Colors.black,
                 ),
               ),
               const SizedBox(height: 20),
-              Visibility(
-                visible: gotPhoto,
-                child: Row(
-                  children: [
+              if (_gotPhoto)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
                     Icon(Icons.verified, color: Colors.black),
                     SizedBox(width: 5),
                     Text("Image uploaded!"),
                   ],
-                  mainAxisAlignment: MainAxisAlignment.center,
                 ),
-              ),
               const SizedBox(height: 10),
               DottedMainBtn(
                 text: "Select your profile picture",
                 onPressed: _pickImage,
               ),
               const SizedBox(height: 30),
+              DottedMainBtn(text: "Register", onPressed: _registerUser),
+              const SizedBox(height: 12),
               DottedMainBtn(
-                onPressed: () async {
-                  await registerUser();
-                },
-                text: "Register",
-              ),
-              SizedBox(height: 12),
-              DottedMainBtn(
+                text: "Already have an account?",
                 onPressed: () {
                   Navigator.pushNamed(context, 'login_screen');
                 },
-                text: "Already have an account?",
               ),
             ],
           ),

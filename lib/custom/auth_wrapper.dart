@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:dotted_app/screens/homescreen.dart';
-import 'package:dotted_app/screens/splashscreen.dart';
+import '../screens/home_screen.dart';
+import 'package:dotted_app/screens/splash_screen.dart';
 
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
@@ -16,7 +16,7 @@ class AuthWrapper extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return Homescreen();
+          return HomeScreen();
         } else {
           return SplashScreen();
         }

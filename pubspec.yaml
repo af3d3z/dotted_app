@@ -40,8 +40,11 @@ dependencies:
   google_fonts: ^6.2.1
   google_sign_in: ^6.3.0
   image_picker: ^1.1.2
+  file_picker: ^10.1.9
+  fluttertoast: ^8.2.12
   crypto: ^3.0.6
   flutter_image_compress: ^2.4.0
+  firebase_messaging: ^15.2.5
 
 dev_dependencies:
   flutter_test:
