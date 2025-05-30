@@ -42,6 +42,10 @@ dependencies:
   image_picker: ^1.1.2
   file_picker: ^10.1.9
   fluttertoast: ^8.2.12
+  path_provider: ^2.1.5
+  video_player: ^2.9.5
+  video_compress: ^3.1.4
+  just_audio: ^0.10.3
   crypto: ^3.0.6
   flutter_image_compress: ^2.4.0
   firebase_messaging: ^15.2.5

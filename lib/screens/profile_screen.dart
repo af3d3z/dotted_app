@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:dotted_app/custom/button.dart';
+import 'package:dotted_app/custom/components/post_tile.dart';
 import 'package:dotted_app/models/user.dart';
-import 'package:dotted_app/models/user_posts.dart';
+import 'package:dotted_app/models/post.dart';
+import 'package:dotted_app/services/post_service.dart';
 import 'package:dotted_app/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as FirebaseAuth;
 import 'package:flutter/material.dart';
@@ -21,35 +21,21 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreen extends State<ProfileScreen> {
   final FirebaseAuth.FirebaseAuth _auth = FirebaseAuth.FirebaseAuth.instance;
   final UserService _userService = UserService();
+  final PostService _postService = PostService();
   bool isLoading = true;
-
-  //UserPosts? userPosts;
+  bool arePostsLoading = true;
 
   late User user;
+  List<Post> posts = [];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadUserInfo();
+      _loadPosts();
     });
   }
-
-  // void _loadUserPosts() async {
-  //   try {
-  //     final result = await _userService.getUserPosts(_auth.currentUser!.uid);
-  //     if (!mounted) return; // avoid setState if widget disposed
-
-  //     setState(() {
-  //       userPosts = result;
-  //       isLoading = false;
-  //     });
-  //   } catch (e) {
-  //     if (!mounted) return;
-  //     _userService.showToast("An error occurred: $e");
-  //     Navigator.pushNamed(context, 'home_screen');
-  //   }
-  // }
 
   void _loadUserInfo() async {
     final firebaseUser = FirebaseAuth.FirebaseAuth.instance.currentUser;
@@ -77,18 +63,37 @@ class _ProfileScreen extends State<ProfileScreen> {
     }
   }
 
-  Uint8List getImageBytes(Uint8List? rawImage) {
-    if (rawImage != null) {
-      return Uint8List.fromList(List<int>.from(rawImage));
+  void _loadPosts() async {
+    final firebaseUser = FirebaseAuth.FirebaseAuth.instance.currentUser;
+
+    if (firebaseUser == null) {
+      if (!mounted) return;
+      _userService.showToast("You are not logged in.");
+      Navigator.pushReplacementNamed(context, 'splash_screen');
+      return;
     }
-    return Uint8List(0);
+
+    try {
+      final result = await _postService.getPosts(firebaseUser.uid);
+      if (!mounted) return;
+
+      setState(() {
+        posts = result;
+        arePostsLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      print(e);
+      _userService.showToast("An error ocurred: $e");
+      Navigator.pushReplacementNamed(context, 'home_screen');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading)
-      return Center(child: CircularProgressIndicator());
-    else {
+    if (isLoading) {
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
+    } else {
       return Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
@@ -123,7 +128,7 @@ class _ProfileScreen extends State<ProfileScreen> {
                           ? CircleAvatar(
                             radius: 80,
                             backgroundImage: MemoryImage(
-                              getImageBytes(user.img),
+                              PostService.getImageBytes(user.img),
                             ),
                           )
                           : CircleAvatar(radius: 80, child: Icon(Icons.person)),
@@ -152,13 +157,18 @@ class _ProfileScreen extends State<ProfileScreen> {
                 SizedBox(height: 10),
                 Center(child: DottedMainBtn(text: "Edit", onPressed: () {})),
                 SizedBox(height: 20),
-                // Column(
-                //   children: [
-                //     posts.isEmpty
-                //         ? Text("No posts for now...")
-                //         : Text("There are posts"),
-                //   ],
-                // ),
+                SizedBox(
+                  height: 400,
+                  child:
+                      posts.isEmpty
+                          ? Text("There are no posts yet.")
+                          : ListView(
+                            shrinkWrap: true,
+                            children: [
+                              for (Post post in posts) PostTile(post: post),
+                            ],
+                          ),
+                ),
               ],
             ),
           ),

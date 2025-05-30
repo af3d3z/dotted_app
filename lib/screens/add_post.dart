@@ -14,7 +14,6 @@ class AddPost extends StatefulWidget {
 
 class _AddPost extends State<AddPost> {
   List<MediaType> mediaTypes = MediaType.values;
-
   MediaType? mediaSelected;
 
   @override
@@ -83,7 +82,18 @@ Widget _buildMediaForm(MediaType? mediaSelected) {
         ],
       );
     case MediaType.video:
-      return Container();
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          DottedMainBtn(
+            text: "Select video",
+            onPressed: () {
+              _userService.uploadFile(FileType.video);
+            },
+          ),
+        ],
+      );
     case MediaType.audio:
       return Container();
     case MediaType.text:
