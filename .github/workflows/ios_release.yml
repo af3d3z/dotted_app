@@ -1,4 +1,4 @@
-name: Build iOS and Upload to GitHub Release
+name: Build Unsigned iOS IPA for Sideload
 
 on:
   push:
@@ -9,11 +9,8 @@ env:
   IOS_DEPLOYMENT_TARGET: '13.0'
 
 jobs:
-  build-ios:
+  build-ios-unsigned:
     runs-on: macos-latest
-    concurrency:
-      group: ios-build-${{ github.ref }}
-      cancel-in-progress: true
 
     steps:
       - name: Checkout code
@@ -29,45 +26,39 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-
 
-      - name: Cache CocoaPods
-        uses: actions/cache@v3
-        with:
-          path: |
-            ios/Pods
-            ~/.cocoapods/repos
-          key: ${{ runner.os }}-cocoapods-${{ hashFiles('ios/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cocoapods-
-
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.32.1'
 
-      - name: flutter pub get
-        run: flutter pub get
-
-      - name: flutter clean
-        run: flutter clean
-
-      - name: flutter pub get (again)
-        run: flutter pub get
-
-      - name: Install CocoaPods
-        working-directory: ios
+      - name: Get dependencies
         run: |
-          pod repo update
-          pod install
+          flutter pub get
+          flutter clean
+          flutter pub get
 
-      - name: Build iOS IPA
-        run: flutter build ipa --release
+      - name: Build unsigned IPA
+        run: flutter build ipa --no-codesign --release
+
+      - name: Package .app into IPA (if needed)
+        run: |
+          # Flutter >=3.10 with --no-codesign often outputs an unsigned .ipa  
+          # but if it only gives an .xcarchive, do this:
+          if [ ! -f build/ios/ipa/Runner.ipa ]; then
+            APP_PATH="build/ios/iphoneos/Runner.app"
+            mkdir -p Payload
+            cp -r "$APP_PATH" Payload/
+            zip -r Runner.ipa Payload
+            mv Runner.ipa build/ios/ipa/
+          fi
 
       - name: Find IPA
         id: find_ipa
         run: |
-          echo "ipa_path=$(find build/ios/ipa -name '*.ipa' | head -n1)" >> $GITHUB_OUTPUT
+          IPA=$(find build/ios/ipa -name '*.ipa' | head -n1)
+          echo "ipa_path=$IPA" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release & upload IPA
+      - name: Create GitHub Release & Upload unsigned IPA
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.find_ipa.outputs.ipa_path }}
