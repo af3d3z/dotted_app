@@ -1,28 +1,32 @@
 # ios/Podfile
+
 platform :ios, '11.0'
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
-project 'Runner', {
-  'Debug' => :debug,
-  'Profile' => :release,
-  'Release' => :release,
-}
-
+# Locate the Flutter SDK root
 def flutter_root
-  generated = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
-  unless File.exist?(generated)
-    abort "Generated.xcconfig must exist. Did you run `flutter pub get`?"
+  generated_xcconfig = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
+  unless File.exist?(generated_xcconfig)
+    abort "Generated.xcconfig not found at #{generated_xcconfig}. Run `flutter pub get` first."
   end
+
+  # The Flutter tool directory is two levels up from this Podfile
   File.expand_path(File.join('..', '..', 'flutter'), __FILE__)
 end
 
-require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
+# Load Flutter’s CocoaPods integration
+require File.expand_path(
+  File.join('packages', 'flutter_tools', 'bin', 'podhelper'),
+  flutter_root
+)
+
 flutter_ios_podfile_setup
 
 target 'Runner' do
   use_frameworks!
   use_modular_headers!
 
+  # Integrate all Flutter plugins
   flutter_install_all_ios_pods(File.dirname(File.realpath(__FILE__)))
 
   target 'RunnerTests' do
