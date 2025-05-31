@@ -59,9 +59,13 @@ jobs:
               exit 1
             fi
 
+            # Prepare payload and ipa dir
             mkdir -p Payload
             cp -r "$APP" Payload/
             zip -r Runner.ipa Payload
+
+            # Ensure the IPA output directory exists
+            mkdir -p build/ios/ipa
             mv Runner.ipa build/ios/ipa/
           fi
 
