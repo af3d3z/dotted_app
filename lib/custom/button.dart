@@ -3,9 +3,15 @@ import 'package:flutter/material.dart';
 // Botones para la pantalla de inicio
 class DottedMainBtn extends StatelessWidget {
   final String text;
+  final Icon? icon;
   final VoidCallback onPressed;
 
-  const DottedMainBtn({super.key, required this.text, required this.onPressed});
+  const DottedMainBtn({
+    super.key,
+    required this.text,
+    required this.onPressed,
+    this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {

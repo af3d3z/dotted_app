@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 import 'package:dotted_app/custom/button.dart';
+import 'package:dotted_app/custom/components/post_preview_modal.dart';
 import 'package:dotted_app/custom/components/post_tile.dart';
+import 'package:dotted_app/custom/components/video_player.dart';
 import 'package:dotted_app/models/user.dart';
 import 'package:dotted_app/models/post.dart';
 import 'package:dotted_app/services/post_service.dart';
@@ -10,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:video_player/video_player.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -162,11 +165,74 @@ class _ProfileScreen extends State<ProfileScreen> {
                   child:
                       posts.isEmpty
                           ? Text("There are no posts yet.")
-                          : ListView(
-                            shrinkWrap: true,
-                            children: [
-                              for (Post post in posts) PostTile(post: post),
-                            ],
+                          : SafeArea(
+                            child: GridView.builder(
+                              itemCount: posts.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 4,
+                                    mainAxisSpacing: 4,
+                                  ),
+                              itemBuilder: (context, index) {
+                                final post = posts[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(20),
+                                        ),
+                                      ),
+                                      builder: (context) {
+                                        return DraggableScrollableSheet(
+                                          expand: false,
+                                          builder:
+                                              (_, controller) => Container(
+                                                decoration: const BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.vertical(
+                                                        top: Radius.circular(
+                                                          20,
+                                                        ),
+                                                      ),
+                                                ),
+                                                child: SingleChildScrollView(
+                                                  controller: controller,
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                          16,
+                                                        ),
+                                                    child: ConstrainedBox(
+                                                      constraints:
+                                                          BoxConstraints(
+                                                            maxHeight:
+                                                                MediaQuery.of(
+                                                                  context,
+                                                                ).size.height *
+                                                                0.8,
+                                                          ),
+                                                      child: PostTile(
+                                                        post: post,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: PostTile(
+                                    post: post,
+                                  ), // or a preview if PostTile is too heavy
+                                );
+                              },
+                            ),
                           ),
                 ),
               ],
@@ -175,5 +241,24 @@ class _ProfileScreen extends State<ProfileScreen> {
         ),
       );
     }
+  }
+
+  Widget buildPost(Post post) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (post.type == MediaType.image)
+            Image.memory(post.value!, fit: BoxFit.cover),
+          if (post.type == MediaType.video)
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: PostVideoPlayer(post: post),
+            ),
+          // Add any post metadata here (time, user, etc)
+        ],
+      ),
+    );
   }
 }

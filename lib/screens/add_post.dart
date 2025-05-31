@@ -74,11 +74,12 @@ Widget _buildMediaForm(MediaType? mediaSelected) {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           DottedMainBtn(
-            text: "Select image",
+            text: "Select an image",
             onPressed: () {
               _userService.uploadFile(FileType.image);
             },
           ),
+          SizedBox(height: 10),
         ],
       );
     case MediaType.video:
