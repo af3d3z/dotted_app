@@ -3,38 +3,81 @@ name: Build iOS and Upload to GitHub Release
 on:
   push:
     tags:
-      - 'v*'  # triggers on version tags like v1.0.0
+      - 'v*'  # only run on version tags like v1.2.3
+
+env:
+  IOS_DEPLOYMENT_TARGET: '11.0'
 
 jobs:
   build-ios:
     runs-on: macos-latest
+    concurrency:
+      group: ios-build-${{ github.ref }}
+      cancel-in-progress: true
 
     steps:
+      # 1) Checkout your code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2) Cache Dart & Flutter packages
+      - name: Cache pub packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            .flutter-pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      # 3) Cache CocoaPods (Pods dir & specs repo)
+      - name: Cache CocoaPods
+        uses: actions/cache@v3
+        with:
+          path: |
+            ios/Pods
+            ~/.cocoapods/repos
+          key: ${{ runner.os }}-cocoapods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cocoapods-
+
+      # 4) Install Flutter SDK
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.32.1'
 
-      - name: Install dependencies
+      # 5) Get dependencies
+      - name: flutter pub get
         run: flutter pub get
 
+      # 6) Clean (ensure fresh iOS artifacts)
+      - name: flutter clean
+        run: flutter clean
+
+      # 7) Regenerate iOS build files
+      - name: flutter pub get (again)
+        run: flutter pub get
+
+      # 8) Install CocoaPods dependencies
       - name: Install CocoaPods
+        working-directory: ios
         run: |
-          cd ios
+          pod repo update
           pod install
 
-      - name: Build iOS release .ipa
+      # 9) Build the release .ipa
+      - name: Build iOS IPA
         run: flutter build ipa --release
 
+      # 10) Locate the .ipa file
       - name: Find IPA
         id: find_ipa
         run: |
-          IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
-          echo "ipa_path=$IPA_PATH" >> $GITHUB_OUTPUT
+          echo "ipa_path=$(find build/ios/ipa -name '*.ipa' | head -n1)" >> $GITHUB_OUTPUT
 
+      # 11) Create GitHub Release & upload the .ipa
       - name: Create GitHub Release and Upload IPA
         uses: softprops/action-gh-release@v2
         with:
