@@ -1,9 +1,14 @@
 name: Build Unsigned iOS IPA for Sideload
 
+# Trigger on semver-style tag pushes (e.g. v1.2.3)
 on:
   push:
     tags:
       - 'v*'
+
+# Grant the GITHUB_TOKEN permissions to create & update releases
+permissions:
+  contents: write
 
 env:
   IOS_DEPLOYMENT_TARGET: '13.0'
@@ -11,11 +16,16 @@ env:
 jobs:
   build-ios-unsigned:
     runs-on: macos-latest
+    concurrency:
+      group: ios-sideload-${{ github.ref }}
+      cancel-in-progress: true
 
     steps:
+      # 1) Checkout your code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2) Cache Dart & Flutter packages
       - name: Cache pub packages
         uses: actions/cache@v3
         with:
@@ -26,56 +36,66 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pub-
 
+      # 3) Cache CocoaPods (Pods folder & specs repo)
+      - name: Cache CocoaPods
+        uses: actions/cache@v3
+        with:
+          path: |
+            ios/Pods
+            ~/.cocoapods/repos
+          key: ${{ runner.os }}-cocoapods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cocoapods-
+
+      # 4) Set up Flutter SDK
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.32.1'
 
-      - name: Get dependencies & clean
+      # 5) Get dependencies & clean
+      - name: Fetch & clean
         run: |
           flutter pub get
           flutter clean
           flutter pub get
 
+      # 6) Build an unsigned IPA
       - name: Build unsigned IPA
         run: flutter build ipa --no-codesign --release
 
-      - name: Package .app into IPA (if not already present)
+      # 7) Package the .app into an IPA if Flutter didn't already
+      - name: Package Runner.app into IPA
         run: |
-          # If Flutter emitted an IPA, we're done
           if ls build/ios/ipa/*.ipa 1> /dev/null 2>&1; then
-            echo "Unsigned IPA already exists."
+            echo "Unsigned IPA already exists, skipping repackaging."
           else
-            # Find the .xcarchive produced by flutter
             ARCHIVE=$(find build/ios -name '*.xcarchive' | head -n1)
             if [ -z "$ARCHIVE" ]; then
               echo "Error: No .xcarchive found under build/ios" >&2
               exit 1
             fi
-
             APP="$ARCHIVE/Products/Applications/Runner.app"
             if [ ! -d "$APP" ]; then
               echo "Error: Runner.app not found at $APP" >&2
               exit 1
             fi
-
-            # Prepare payload and ipa dir
             mkdir -p Payload
             cp -r "$APP" Payload/
             zip -r Runner.ipa Payload
-
-            # Ensure the IPA output directory exists
             mkdir -p build/ios/ipa
             mv Runner.ipa build/ios/ipa/
           fi
 
+      # 8) Locate the unsigned IPA
       - name: Find IPA
         id: find_ipa
         run: |
           IPA_PATH=$(find build/ios/ipa -name '*.ipa' | head -n1)
           echo "ipa_path=$IPA_PATH" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release & Upload unsigned IPA
+      # 9) Create or update GitHub Release & upload the unsigned IPA
+      - name: Create GitHub Release & Upload IPA
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.find_ipa.outputs.ipa_path }}
