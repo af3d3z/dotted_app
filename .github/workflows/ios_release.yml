@@ -31,7 +31,7 @@ jobs:
         with:
           flutter-version: '3.32.1'
 
-      - name: Get dependencies
+      - name: Get dependencies & clean
         run: |
           flutter pub get
           flutter clean
@@ -40,14 +40,27 @@ jobs:
       - name: Build unsigned IPA
         run: flutter build ipa --no-codesign --release
 
-      - name: Package .app into IPA (if needed)
+      - name: Package .app into IPA (if not already present)
         run: |
-          # Flutter >=3.10 with --no-codesign often outputs an unsigned .ipa  
-          # but if it only gives an .xcarchive, do this:
-          if [ ! -f build/ios/ipa/Runner.ipa ]; then
-            APP_PATH="build/ios/iphoneos/Runner.app"
+          # If Flutter emitted an IPA, we're done
+          if ls build/ios/ipa/*.ipa 1> /dev/null 2>&1; then
+            echo "Unsigned IPA already exists."
+          else
+            # Find the .xcarchive produced by flutter
+            ARCHIVE=$(find build/ios -name '*.xcarchive' | head -n1)
+            if [ -z "$ARCHIVE" ]; then
+              echo "Error: No .xcarchive found under build/ios" >&2
+              exit 1
+            fi
+
+            APP="$ARCHIVE/Products/Applications/Runner.app"
+            if [ ! -d "$APP" ]; then
+              echo "Error: Runner.app not found at $APP" >&2
+              exit 1
+            fi
+
             mkdir -p Payload
-            cp -r "$APP_PATH" Payload/
+            cp -r "$APP" Payload/
             zip -r Runner.ipa Payload
             mv Runner.ipa build/ios/ipa/
           fi
@@ -55,8 +68,8 @@ jobs:
       - name: Find IPA
         id: find_ipa
         run: |
-          IPA=$(find build/ios/ipa -name '*.ipa' | head -n1)
-          echo "ipa_path=$IPA" >> $GITHUB_OUTPUT
+          IPA_PATH=$(find build/ios/ipa -name '*.ipa' | head -n1)
+          echo "ipa_path=$IPA_PATH" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release & Upload unsigned IPA
         uses: softprops/action-gh-release@v2
