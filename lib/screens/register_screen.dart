@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -22,6 +24,7 @@ class _RegisterState extends State<Register> {
   final _emailController = TextEditingController();
   final _passController = TextEditingController();
   final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
 
   File? _image;
   bool _gotPhoto = false;
@@ -72,6 +75,12 @@ class _RegisterState extends State<Register> {
             content: Text(responseData['msg'] ?? "Registered successfully"),
           ),
         );
+
+        _firestore.collection("users").doc(userCredential.user!.uid).set({
+          'uid': userCredential.user!.uid,
+          'email': userCredential.user!.email,
+        });
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const Login()),

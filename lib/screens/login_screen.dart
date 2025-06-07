@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_app/custom/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ class _LoginState extends State<Login> {
   String email = "";
   String password = "";
   final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +45,7 @@ class _LoginState extends State<Login> {
               const SizedBox(height: 40),
               TextField(
                 decoration: const InputDecoration(
-                  labelText: 'Email/Username',
+                  labelText: 'Email',
                   border: OutlineInputBorder(),
                   focusColor: Colors.black,
                 ),
@@ -86,6 +88,11 @@ class _LoginState extends State<Login> {
                         apiUrl,
                         headers: {'Authorization': token},
                       );
+
+                      _firestore.collection("users").doc(user.uid).set({
+                        'uid': user.uid,
+                        'email': user.email,
+                      });
 
                       print(response.body);
                       Navigator.pushNamed(context, 'home_screen');

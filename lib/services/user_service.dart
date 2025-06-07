@@ -9,7 +9,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:dotted_app/custom/global.dart';
 
 class UserService {
-  void showToast(String message) {
+  // shows a toast with the message specified
+  static void showToast(String message) {
     Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
@@ -39,37 +40,5 @@ class UserService {
     }
 
     return user;
-  }
-
-  // uploads a post to the server
-  Future<void> uploadFile(FileType type) async {
-    final result = await FilePicker.platform.pickFiles(
-      type: type,
-      allowMultiple: false,
-    );
-
-    if (result != null && result.files.single.path != null) {
-      File? file =
-          type == FileType.video
-              ? await compressVideo(File(result.files.single.path!))
-              : File(result.files.single.path!);
-
-      final uri = Uri.parse(API_URL + "api/posts");
-
-      final request =
-          http.MultipartRequest('POST', uri)
-            ..fields['userId'] = _auth.currentUser!.uid
-            ..fields['type'] = type.name
-            ..files.add(
-              await http.MultipartFile.fromPath('value', file!.path!),
-            );
-
-      final response = await request.send();
-
-      final respString = await response.stream.bytesToString();
-      final decoded = jsonDecode(respString);
-
-      showToast(decoded['msg']);
-    }
   }
 }

@@ -5,12 +5,14 @@ class DottedMainBtn extends StatelessWidget {
   final String text;
   final Icon? icon;
   final VoidCallback onPressed;
+  final double minWidth;
 
   const DottedMainBtn({
     super.key,
     required this.text,
     required this.onPressed,
     this.icon,
+    this.minWidth = 200,
   });
 
   @override
@@ -22,7 +24,7 @@ class DottedMainBtn extends StatelessWidget {
         foregroundColor: Colors.white,
         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        minimumSize: Size(200, 40),
+        minimumSize: Size(minWidth, 40),
       ),
       child: Text(text, style: TextStyle(fontSize: 16)),
     );

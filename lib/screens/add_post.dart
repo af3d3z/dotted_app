@@ -1,4 +1,5 @@
 import 'package:dotted_app/custom/button.dart';
+import 'package:dotted_app/services/post_service.dart';
 import 'package:dotted_app/services/user_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -65,7 +66,8 @@ class _AddPost extends State<AddPost> {
 }
 
 Widget _buildMediaForm(MediaType? mediaSelected) {
-  UserService _userService = UserService();
+  PostService _postService = PostService();
+  final textField = TextEditingController();
 
   switch (mediaSelected) {
     case MediaType.image:
@@ -76,7 +78,7 @@ Widget _buildMediaForm(MediaType? mediaSelected) {
           DottedMainBtn(
             text: "Select an image",
             onPressed: () {
-              _userService.uploadFile(FileType.image);
+              _postService.uploadFile(FileType.image);
             },
           ),
           SizedBox(height: 10),
@@ -90,15 +92,68 @@ Widget _buildMediaForm(MediaType? mediaSelected) {
           DottedMainBtn(
             text: "Select video",
             onPressed: () {
-              _userService.uploadFile(FileType.video);
+              _postService.uploadFile(FileType.video);
             },
           ),
         ],
       );
     case MediaType.audio:
-      return Container();
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          DottedMainBtn(
+            text: "Select audio file",
+            onPressed: () {
+              _postService.uploadFile(FileType.audio);
+            },
+          ),
+        ],
+      );
     case MediaType.text:
-      return Container();
+      return Column(
+        children: [
+          const SizedBox(height: 20),
+          SizedBox(
+            width: 310,
+            child: TextField(
+              minLines: 6,
+              maxLength: 120,
+              maxLines: null,
+              keyboardType: TextInputType.multiline,
+              controller: textField,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: "Write your post here.",
+                alignLabelWithHint: true,
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              DottedMainBtn(
+                text: "Reset",
+                onPressed: () {
+                  textField.clear();
+                },
+                minWidth: 150,
+              ),
+              SizedBox(width: 10),
+              DottedMainBtn(
+                text: "Confirm",
+                onPressed: () {
+                  _postService.uploadText(textField.text);
+                  textField.clear();
+                },
+                minWidth: 150,
+              ),
+            ],
+          ),
+        ],
+      );
     case null:
       return Text("No post type was selected.");
   }

@@ -1,8 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class GoogleAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // hace que te logees con google
@@ -26,6 +28,12 @@ class GoogleAuthService {
       );
 
       userCredentials = await _auth.signInWithCredential(credential);
+
+      _firestore.collection("users").doc(userCredentials.user!.uid).set({
+        'uid': userCredentials.user!.uid,
+        'email': userCredentials.user!.email,
+      });
+
       return userCredentials;
     } catch (e) {
       rethrow;

@@ -1,6 +1,4 @@
-import 'dart:typed_data';
 import 'package:dotted_app/custom/button.dart';
-import 'package:dotted_app/custom/components/post_preview_modal.dart';
 import 'package:dotted_app/custom/components/post_tile.dart';
 import 'package:dotted_app/custom/components/video_player.dart';
 import 'package:dotted_app/models/user.dart';
@@ -11,8 +9,6 @@ import 'package:firebase_auth/firebase_auth.dart' as FirebaseAuth;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:video_player/video_player.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -45,7 +41,7 @@ class _ProfileScreen extends State<ProfileScreen> {
 
     if (firebaseUser == null) {
       if (!mounted) return;
-      _userService.showToast("You are not logged in.");
+      UserService.showToast("You are not logged in.");
       Navigator.pushReplacementNamed(context, 'splash_screen');
       return;
     }
@@ -61,7 +57,7 @@ class _ProfileScreen extends State<ProfileScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      _userService.showToast("An error occurred: $e");
+      UserService.showToast("An error occurred: $e");
       Navigator.pushReplacementNamed(context, 'home_screen');
     }
   }
@@ -71,7 +67,7 @@ class _ProfileScreen extends State<ProfileScreen> {
 
     if (firebaseUser == null) {
       if (!mounted) return;
-      _userService.showToast("You are not logged in.");
+      UserService.showToast("You are not logged in.");
       Navigator.pushReplacementNamed(context, 'splash_screen');
       return;
     }
@@ -87,7 +83,7 @@ class _ProfileScreen extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       print(e);
-      _userService.showToast("An error ocurred: $e");
+      UserService.showToast("An error ocurred: $e");
       Navigator.pushReplacementNamed(context, 'home_screen');
     }
   }
@@ -134,7 +130,15 @@ class _ProfileScreen extends State<ProfileScreen> {
                               PostService.getImageBytes(user.img),
                             ),
                           )
-                          : CircleAvatar(radius: 80, child: Icon(Icons.person)),
+                          : CircleAvatar(
+                            backgroundColor: Colors.grey,
+                            radius: 60,
+                            child: Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Colors.white60,
+                            ),
+                          ),
                 ),
                 SizedBox(height: 16),
                 Center(
@@ -162,78 +166,64 @@ class _ProfileScreen extends State<ProfileScreen> {
                 SizedBox(height: 20),
                 SizedBox(
                   height: 400,
-                  child:
-                      posts.isEmpty
-                          ? Text("There are no posts yet.")
-                          : SafeArea(
-                            child: GridView.builder(
-                              itemCount: posts.length,
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 3,
-                                    crossAxisSpacing: 4,
-                                    mainAxisSpacing: 4,
-                                  ),
-                              itemBuilder: (context, index) {
-                                final post = posts[index];
-                                return GestureDetector(
-                                  onTap: () {
-                                    showModalBottomSheet(
-                                      context: context,
-                                      isScrollControlled: true,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(20),
-                                        ),
-                                      ),
-                                      builder: (context) {
-                                        return DraggableScrollableSheet(
-                                          expand: false,
+                  child: Builder(
+                    builder: (_) {
+                      if (arePostsLoading) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 40),
+                          child: Center(
+                            child: Column(
+                              children: [
+                                CircularProgressIndicator(color: Colors.black),
+                                SizedBox(height: 10),
+                                Text("Fetching posts..."),
+                              ],
+                            ),
+                          ),
+                        );
+                      } else if (posts.isEmpty) {
+                        return Text("There are no posts.");
+                      } else {
+                        return SafeArea(
+                          child: GridView.builder(
+                            itemCount: posts.length,
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  crossAxisSpacing: 4,
+                                  mainAxisSpacing: 4,
+                                ),
+                            itemBuilder: (context, index) {
+                              final post = posts[index];
+                              return Builder(
+                                builder:
+                                    (context) => GestureDetector(
+                                      onTap: () {
+                                        print("Tapped");
+                                        showModalBottomSheet(
+                                          context: context,
                                           builder:
-                                              (_, controller) => Container(
-                                                decoration: const BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                      BorderRadius.vertical(
-                                                        top: Radius.circular(
-                                                          20,
-                                                        ),
-                                                      ),
-                                                ),
-                                                child: SingleChildScrollView(
-                                                  controller: controller,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                          16,
-                                                        ),
-                                                    child: ConstrainedBox(
-                                                      constraints:
-                                                          BoxConstraints(
-                                                            maxHeight:
-                                                                MediaQuery.of(
-                                                                  context,
-                                                                ).size.height *
-                                                                0.8,
-                                                          ),
-                                                      child: PostTile(
-                                                        post: post,
-                                                      ),
-                                                    ),
-                                                  ),
+                                              (context) => Container(
+                                                height: 200,
+                                                color: Colors.white,
+                                                child: Center(
+                                                  child: Text("modal"),
                                                 ),
                                               ),
                                         );
                                       },
-                                    );
-                                  },
-                                  child: PostTile(
-                                    post: post,
-                                  ), // or a preview if PostTile is too heavy
-                                );
-                              },
-                            ),
+                                      child: PostTile(
+                                        post: post,
+                                        rootPost: true,
+                                      ),
+                                    ),
+                              );
+                            },
                           ),
+                        );
+                      }
+                    },
+                  ),
                 ),
               ],
             ),
@@ -241,24 +231,5 @@ class _ProfileScreen extends State<ProfileScreen> {
         ),
       );
     }
-  }
-
-  Widget buildPost(Post post) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (post.type == MediaType.image)
-            Image.memory(post.value!, fit: BoxFit.cover),
-          if (post.type == MediaType.video)
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: PostVideoPlayer(post: post),
-            ),
-          // Add any post metadata here (time, user, etc)
-        ],
-      ),
-    );
   }
 }

@@ -37,7 +37,7 @@ class _CompleteProfilePage extends State<CompleteProfilePage> {
   }
 
   Future<void> completeProfile(String email) async {
-    Uri apiUrl = Uri.parse("${API_URL}api/complete-profile");
+    Uri apiUrl = Uri.parse("${API_URL}api/store-user-data");
     FirebaseMessaging messaging = FirebaseMessaging.instance;
     String? token = await messaging.getToken();
     print(token);

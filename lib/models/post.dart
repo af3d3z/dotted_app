@@ -29,7 +29,6 @@ class Post {
       try {
         valueBytes = base64Decode(json['value']);
       } catch (e) {
-        // Handle invalid base64 string if necessary
         valueBytes = null;
       }
     }
