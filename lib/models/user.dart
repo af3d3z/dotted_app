@@ -3,10 +3,10 @@ import 'dart:typed_data';
 
 class User {
   final String id;
-  final String username;
+  String username;
   final String email;
-  final Uint8List? img;
-  final String? description;
+  Uint8List? img;
+  String? description;
 
   User({
     required this.id,

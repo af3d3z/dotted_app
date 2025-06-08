@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_app/custom/login_provider_btn.dart';
 import 'package:dotted_app/screens/google_signin.dart';
+import 'package:dotted_app/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_app/custom/google_sign_in.dart';
 import 'package:dotted_app/custom/button.dart';
@@ -34,6 +36,43 @@ class _SplashScreenState extends State<SplashScreen>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.bounceOut));
 
     _controller.forward();
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      final userCredentials = await GoogleAuthService().signInWithGoogle();
+
+      bool userExists = await GoogleAuthService()
+          .checkIfUserExists(userCredentials.user!.uid);
+
+      if (userExists) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      } else {
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(userCredentials.user!.uid)
+            .set({
+          'uid': userCredentials.user!.uid,
+          'email': userCredentials.user!.email,
+        });
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CompleteProfilePage(
+              email: userCredentials.user!.email!,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        err = e.toString();
+      });
+    }
   }
 
   @override
@@ -77,7 +116,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ],
                 ),
               ),
-
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Padding(
@@ -87,29 +125,9 @@ class _SplashScreenState extends State<SplashScreen>
                     children: [
                       Text(err, style: TextStyle(color: Colors.red)),
                       ProviderLoginBtn(
-                        text: "Sign in",
-                        img: Image.asset('assets/google.png'),
-                        onPressed: () async {
-                          try {
-                            final user =
-                                await GoogleAuthService().signInWithGoogle();
-                            print(user.toString());
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => CompleteProfilePage(
-                                      email: user.user!.email!,
-                                    ),
-                              ),
-                            );
-                          } catch (e) {
-                            setState(() {
-                              err = e.toString();
-                            });
-                          }
-                        },
-                      ),
+                          text: "Sign in",
+                          img: Image.asset('assets/google.png'),
+                          onPressed: _handleGoogleSignIn),
                       SizedBox(height: 12),
                       DottedMainBtn(
                         text: "Login",

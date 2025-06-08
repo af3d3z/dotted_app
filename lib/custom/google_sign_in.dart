@@ -7,12 +7,9 @@ class GoogleAuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  // hace que te logees con google
+  // Sign in with Google and return user credentials
   Future<UserCredential> signInWithGoogle() async {
     try {
-      UserCredential userCredentials;
-      final GoogleSignInAuthentication googleAuth;
-      final OAuthCredential credential;
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         throw FirebaseAuthException(
@@ -21,29 +18,35 @@ class GoogleAuthService {
         );
       }
 
-      googleAuth = await googleUser.authentication;
-      credential = GoogleAuthProvider.credential(
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
 
-      userCredentials = await _auth.signInWithCredential(credential);
-
-      _firestore.collection("users").doc(userCredentials.user!.uid).set({
-        'uid': userCredentials.user!.uid,
-        'email': userCredentials.user!.email,
-      });
-
-      return userCredentials;
+      return await _auth.signInWithCredential(credential);
     } catch (e) {
       rethrow;
     }
   }
 
+  // Check if the user exists in Firestore by UID
+  Future<bool> checkIfUserExists(String uid) async {
+    try {
+      final userDocument = await _firestore.collection("users").doc(uid).get();
+      return userDocument.exists;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // Sign out of Google and Firebase
   Future<void> signOut() async {
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
 
+  // Stream to listen to auth state changes
   Stream<User?> get user => _auth.authStateChanges();
 }

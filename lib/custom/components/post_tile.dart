@@ -3,8 +3,6 @@ import 'dart:typed_data';
 
 import 'package:dotted_app/custom/components/video_player.dart';
 import 'package:dotted_app/models/post.dart';
-import 'package:dotted_app/services/post_service.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,7 +23,7 @@ class PostTile extends StatelessWidget {
 
   Future<void> playAudio(Uint8List blob) async {
     final tempDir = await getTemporaryDirectory();
-    final tempFile = await File('${tempDir.path}/audio.mp3');
+    final tempFile = File('${tempDir.path}/audio.mp3');
 
     await tempFile.writeAsBytes(blob, flush: true);
 
@@ -43,13 +41,13 @@ class PostTile extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         print(post.postId);
-        if (this.rootPost) {
+        if (rootPost) {
           showGeneralDialog(
             context: context,
             barrierDismissible: true,
             barrierLabel: "Post",
             transitionDuration: Duration(milliseconds: 200),
-            pageBuilder: (_, _, ___) {
+            pageBuilder: (_, __, ___) {
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Center(
@@ -119,14 +117,11 @@ class PostTile extends StatelessWidget {
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
         margin: EdgeInsets.only(top: 10, bottom: 10),
         child: switch (post.type) {
-          MediaType.image =>
-            post.value != null
-                ? Image.memory(post.value!, height: 300, width: 300)
-                : Text("No image available"),
-
-          MediaType.audio =>
-            post.value != null
-                ? Center(
+          MediaType.image => post.value != null
+              ? Image.memory(post.value!, height: 300, width: 300)
+              : Text("No image available"),
+          MediaType.audio => post.value != null
+              ? Center(
                   child: IconButton(
                     onPressed: () {
                       playAudio(post.value!);
@@ -135,11 +130,10 @@ class PostTile extends StatelessWidget {
                     color: Colors.black,
                   ),
                 )
-                : Text("No audio available"),
+              : Text("No audio available"),
           MediaType.video => PostVideoPlayer(post: post),
-          MediaType.text =>
-            post.value != null
-                ? Center(
+          MediaType.text => post.value != null
+              ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Material(
@@ -152,7 +146,7 @@ class PostTile extends StatelessWidget {
                     ),
                   ),
                 )
-                : Text("No text available"),
+              : Text("No text available"),
         },
       ),
     );

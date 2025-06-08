@@ -1,4 +1,5 @@
 import 'package:dotted_app/screens/chat_screen.dart';
+import 'package:dotted_app/screens/edit_screen.dart';
 import 'package:dotted_app/screens/login_screen.dart';
 import 'package:dotted_app/screens/register_screen.dart';
 import 'package:dotted_app/custom/global.dart';
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      initialRoute: 'home_screen',
+      initialRoute: 'splash_screen',
       home: AuthWrapper(),
       routes: {
         'splash_screen': (context) => SplashScreen(),
@@ -30,6 +31,7 @@ class MyApp extends StatelessWidget {
         'login_screen': (context) => Login(),
         'home_screen': (context) => HomeScreen(),
         'chat_screen': (context) => ChatScreen(),
+        'edit_screen': (context) => EditScreen()
       },
     );
   }

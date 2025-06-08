@@ -47,12 +47,11 @@ class _CreateState extends State<ChatScreen> {
         }
 
         return ListView(
-          children:
-              snapshot.data!
-                  .map<Widget>(
-                    (userData) => _buildUserListItem(userData, context),
-                  )
-                  .toList(),
+          children: snapshot.data!
+              .map<Widget>(
+                (userData) => _buildUserListItem(userData, context),
+              )
+              .toList(),
         );
       },
     );

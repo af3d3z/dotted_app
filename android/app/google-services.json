@@ -9,15 +9,23 @@
       "client_info": {
         "mobilesdk_app_id": "1:594990381370:android:e0c55315f6a6242a73b803",
         "android_client_info": {
-          "package_name": "com.example.dotted_app"
+          "package_name": "com.alebozek.Dotted"
         }
       },
       "oauth_client": [
         {
+          "client_id": "594990381370-2tclde0qebhatuabjemjn3ggd6m2qdlm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.alebozek.Dotted",
+            "certificate_hash": "7f31fae46436fe565ad230d500fd64a830674782"
+          }
+        },
+        {
           "client_id": "594990381370-f6vph77rkmbbvpg0rnt90fbp8j45mp1d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.dotted_app",
+            "package_name": "com.alebozek.Dotted",
             "certificate_hash": "0b54e664b04d9bafd35814b76687cd78efccef20"
           }
         },
@@ -58,6 +66,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "594990381370-9ql0ef0n0b3vjtpuecac9e6chet81124.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dotted",
+            "certificate_hash": "7f31fae46436fe565ad230d500fd64a830674782"
+          }
+        },
+        {
+          "client_id": "594990381370-grjc9o9sa4na26s9n3rfd2did6kkh0sm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dotted",
+            "certificate_hash": "0b54e664b04d9bafd35814b76687cd78efccef20"
+          }
+        },
+        {
           "client_id": "594990381370-l1hjliivuomfkc3389gdk5jh8a5j4gd4.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -93,6 +117,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "594990381370-3rqbtl2la24rr6ji9ajdls2ldgjqrti6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dotted_app",
+            "certificate_hash": "7f31fae46436fe565ad230d500fd64a830674782"
+          }
+        },
+        {
+          "client_id": "594990381370-j7ln4aekgl893fjgad3f27skjof3iil5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dotted_app",
+            "certificate_hash": "0b54e664b04d9bafd35814b76687cd78efccef20"
+          }
+        },
         {
           "client_id": "594990381370-l1hjliivuomfkc3389gdk5jh8a5j4gd4.apps.googleusercontent.com",
           "client_type": 3

@@ -1,8 +1,8 @@
 import 'package:dotted_app/custom/button.dart';
 import 'package:dotted_app/custom/components/post_tile.dart';
-import 'package:dotted_app/custom/components/video_player.dart';
 import 'package:dotted_app/models/user.dart';
 import 'package:dotted_app/models/post.dart';
+import 'package:dotted_app/screens/edit_screen.dart';
 import 'package:dotted_app/services/post_service.dart';
 import 'package:dotted_app/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as FirebaseAuth;
@@ -37,29 +37,16 @@ class _ProfileScreen extends State<ProfileScreen> {
   }
 
   void _loadUserInfo() async {
-    final firebaseUser = FirebaseAuth.FirebaseAuth.instance.currentUser;
+    final result = await _userService.loadUserInfo(context);
 
-    if (firebaseUser == null) {
-      if (!mounted) return;
-      UserService.showToast("You are not logged in.");
-      Navigator.pushReplacementNamed(context, 'splash_screen');
+    if (result == null) {
       return;
     }
 
-    try {
-      final result = await _userService.getUser(firebaseUser.uid);
-
-      if (!mounted) return;
-
-      setState(() {
-        user = result;
-        isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      UserService.showToast("An error occurred: $e");
-      Navigator.pushReplacementNamed(context, 'home_screen');
-    }
+    setState(() {
+      user = result;
+      isLoading = false;
+    });
   }
 
   void _loadPosts() async {
@@ -91,7 +78,12 @@ class _ProfileScreen extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+          backgroundColor: Colors.black,
+          body: Center(
+              child: CircularProgressIndicator(
+            color: Colors.black,
+          )));
     } else {
       return Scaffold(
         backgroundColor: Colors.white,
@@ -122,23 +114,22 @@ class _ProfileScreen extends State<ProfileScreen> {
                 ),
                 SizedBox(height: 24),
                 Center(
-                  child:
-                      (user.img != null)
-                          ? CircleAvatar(
-                            radius: 80,
-                            backgroundImage: MemoryImage(
-                              PostService.getImageBytes(user.img),
-                            ),
-                          )
-                          : CircleAvatar(
-                            backgroundColor: Colors.grey,
-                            radius: 60,
-                            child: Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Colors.white60,
-                            ),
+                  child: (user.img != null)
+                      ? CircleAvatar(
+                          radius: 80,
+                          backgroundImage: MemoryImage(
+                            PostService.getImageBytes(user.img),
                           ),
+                        )
+                      : CircleAvatar(
+                          backgroundColor: Colors.grey,
+                          radius: 60,
+                          child: Icon(
+                            Icons.person,
+                            size: 60,
+                            color: Colors.white60,
+                          ),
+                        ),
                 ),
                 SizedBox(height: 16),
                 Center(
@@ -162,7 +153,12 @@ class _ProfileScreen extends State<ProfileScreen> {
                   ),
                 ),
                 SizedBox(height: 10),
-                Center(child: DottedMainBtn(text: "Edit", onPressed: () {})),
+                Center(
+                    child: DottedMainBtn(
+                        text: "Edit",
+                        onPressed: () {
+                          Navigator.pushNamed(context, 'edit_screen');
+                        })),
                 SizedBox(height: 20),
                 SizedBox(
                   height: 400,
@@ -189,34 +185,32 @@ class _ProfileScreen extends State<ProfileScreen> {
                             itemCount: posts.length,
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 3,
-                                  crossAxisSpacing: 4,
-                                  mainAxisSpacing: 4,
-                                ),
+                              crossAxisCount: 3,
+                              crossAxisSpacing: 4,
+                              mainAxisSpacing: 4,
+                            ),
                             itemBuilder: (context, index) {
                               final post = posts[index];
                               return Builder(
-                                builder:
-                                    (context) => GestureDetector(
-                                      onTap: () {
-                                        print("Tapped");
-                                        showModalBottomSheet(
-                                          context: context,
-                                          builder:
-                                              (context) => Container(
-                                                height: 200,
-                                                color: Colors.white,
-                                                child: Center(
-                                                  child: Text("modal"),
-                                                ),
-                                              ),
-                                        );
-                                      },
-                                      child: PostTile(
-                                        post: post,
-                                        rootPost: true,
+                                builder: (context) => GestureDetector(
+                                  onTap: () {
+                                    print("Tapped");
+                                    showModalBottomSheet(
+                                      context: context,
+                                      builder: (context) => Container(
+                                        height: 200,
+                                        color: Colors.white,
+                                        child: Center(
+                                          child: Text("modal"),
+                                        ),
                                       ),
-                                    ),
+                                    );
+                                  },
+                                  child: PostTile(
+                                    post: post,
+                                    rootPost: true,
+                                  ),
+                                ),
                               );
                             },
                           ),
