@@ -11,7 +11,8 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String? userId;
+  const ProfileScreen({super.key, this.userId});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreen();
@@ -37,7 +38,7 @@ class _ProfileScreen extends State<ProfileScreen> {
   }
 
   void _loadUserInfo() async {
-    final result = await _userService.loadUserInfo(context);
+    final result = await _userService.loadUserInfo(context, widget.userId);
 
     if (result == null) {
       return;
@@ -60,7 +61,8 @@ class _ProfileScreen extends State<ProfileScreen> {
     }
 
     try {
-      final result = await _postService.getPosts(firebaseUser.uid);
+      final result =
+          await _postService.getPosts(widget.userId ?? firebaseUser.uid);
       if (!mounted) return;
 
       setState(() {
@@ -69,7 +71,6 @@ class _ProfileScreen extends State<ProfileScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      print(e);
       UserService.showToast("An error ocurred: $e");
       Navigator.pushReplacementNamed(context, 'home_screen');
     }
@@ -94,14 +95,18 @@ class _ProfileScreen extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                    icon: Icon(Icons.exit_to_app),
-                    onPressed: () {
-                      _auth.signOut();
-                      Navigator.pushNamed(context, 'splash_screen');
-                    },
-                  ),
+                  alignment: widget.userId == null
+                      ? Alignment.topRight
+                      : Alignment.topLeft,
+                  child: widget.userId == null
+                      ? IconButton(
+                          icon: Icon(Icons.exit_to_app),
+                          onPressed: () {
+                            _auth.signOut();
+                            Navigator.pushNamed(context, 'splash_screen');
+                          },
+                        )
+                      : BackButton(),
                 ),
                 Center(
                   child: Text(
@@ -154,11 +159,20 @@ class _ProfileScreen extends State<ProfileScreen> {
                 ),
                 SizedBox(height: 10),
                 Center(
-                    child: DottedMainBtn(
-                        text: "Edit",
-                        onPressed: () {
-                          Navigator.pushNamed(context, 'edit_screen');
-                        })),
+                    child: widget.userId == null
+                        ? DottedMainBtn(
+                            text: "Edit",
+                            onPressed: () async {
+                              final shouldRefresh = await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => EditScreen()),
+                              );
+
+                              if (shouldRefresh == true) {
+                                _loadUserInfo();
+                              }
+                            })
+                        : Container()),
                 SizedBox(height: 20),
                 SizedBox(
                   height: 400,
@@ -192,24 +206,9 @@ class _ProfileScreen extends State<ProfileScreen> {
                             itemBuilder: (context, index) {
                               final post = posts[index];
                               return Builder(
-                                builder: (context) => GestureDetector(
-                                  onTap: () {
-                                    print("Tapped");
-                                    showModalBottomSheet(
-                                      context: context,
-                                      builder: (context) => Container(
-                                        height: 200,
-                                        color: Colors.white,
-                                        child: Center(
-                                          child: Text("modal"),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: PostTile(
-                                    post: post,
-                                    rootPost: true,
-                                  ),
+                                builder: (context) => PostTile(
+                                  post: post,
+                                  rootPost: true,
                                 ),
                               );
                             },

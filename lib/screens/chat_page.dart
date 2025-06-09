@@ -3,6 +3,7 @@ import 'package:dotted_app/custom/components/chat_bubble.dart';
 import 'package:dotted_app/custom/components/message_textfield.dart';
 import 'package:dotted_app/custom/components/user_tile.dart';
 import 'package:dotted_app/models/user.dart';
+import 'package:dotted_app/screens/profile_screen.dart';
 import 'package:dotted_app/services/chat_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as Firebase;
 import 'package:flutter/material.dart';
@@ -31,7 +32,17 @@ class ChatPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.white,
         toolbarHeight: 75,
-        title: UserTile(username: user.username, img: user.img, onTap: () {}),
+        title: UserTile(
+            username: user.username,
+            img: user.img,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProfileScreen(userId: user.id),
+                ),
+              );
+            }),
       ),
       body: Column(
         children: [
@@ -97,7 +108,7 @@ class ChatPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30.0),
             child: Text(
-              "${dateTime.year}-${dateTime.month}-${dateTime.day} ${dateTime.hour < 10 ? "0" + dateTime.hour.toString() : dateTime.hour}:${dateTime.minute < 10 ? "0" + dateTime.minute.toString() : dateTime.minute} ",
+              "${dateTime.year}-${dateTime.month}-${dateTime.day} ${dateTime.hour < 10 ? "0${dateTime.hour}" : dateTime.hour}:${dateTime.minute < 10 ? "0${dateTime.minute}" : dateTime.minute} ",
               style: TextStyle(color: Colors.grey, fontSize: 12),
               textAlign: isCurrentUser ? TextAlign.end : TextAlign.start,
             ),

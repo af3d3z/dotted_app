@@ -25,4 +25,14 @@ class User {
       description: json['description']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'email': email,
+      'img': img,
+      'description': description
+    };
+  }
 }

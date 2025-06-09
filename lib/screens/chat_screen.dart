@@ -2,6 +2,7 @@ import 'package:dotted_app/custom/components/user_tile.dart';
 import 'package:dotted_app/models/user.dart';
 import 'package:dotted_app/screens/chat_page.dart';
 import 'package:dotted_app/services/chat_service.dart';
+import 'package:dotted_app/services/user_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as Firebase;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -35,6 +36,12 @@ class _CreateState extends State<ChatScreen> {
   }
 
   Widget _buildUserList() {
+    final firebaseUser = Firebase.FirebaseAuth.instance.currentUser;
+
+    if (firebaseUser == null) {
+      UserService.showToast("You are not logged in.");
+      Navigator.pushReplacementNamed(context, 'splash_screen');
+    }
     return FutureBuilder(
       future: _chatService.getUsers(),
       builder: (context, snapshot) {

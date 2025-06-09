@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dotted_app/custom/button.dart';
+import 'package:dotted_app/custom/global.dart';
 import 'package:dotted_app/models/user.dart';
 import 'package:dotted_app/services/post_service.dart';
 import 'package:dotted_app/services/user_service.dart';
@@ -19,10 +20,12 @@ class EditScreen extends StatefulWidget {
 
 class _EditScreen extends State<EditScreen> {
   final UserService _userService = UserService();
-  bool isLoading = false;
+  final FirebaseAuth.FirebaseAuth _auth = FirebaseAuth.FirebaseAuth.instance;
+  bool isLoading = true;
   late User user;
   Uint8List? img;
-  String? usernameTextField;
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
 
   @override
   void initState() {
@@ -33,7 +36,7 @@ class _EditScreen extends State<EditScreen> {
   }
 
   void _loadUserInfo() async {
-    final result = await _userService.loadUserInfo(context);
+    final result = await _userService.loadUserInfo(context, null);
 
     if (result == null) {
       return;
@@ -42,7 +45,8 @@ class _EditScreen extends State<EditScreen> {
     setState(() {
       user = result;
       img = user.img;
-      usernameTextField = user.username;
+      _usernameController.text = user.username;
+      _descriptionController.text = user.description ?? "";
       isLoading = false;
     });
   }
@@ -53,10 +57,13 @@ class _EditScreen extends State<EditScreen> {
       source: ImageSource.gallery,
     );
 
-    final bytes = await pickedFile!.readAsBytes();
+    File file = File(pickedFile!.path);
 
-    setState(() async {
-      img = bytes;
+    // ✅ Compress the image here
+    final Uint8List? compressedBytes = await compressImage(file, quality: 50);
+
+    setState(() {
+      img = compressedBytes;
       user.img = img;
     });
   }
@@ -116,18 +123,50 @@ class _EditScreen extends State<EditScreen> {
                 height: 20,
               ),
               DottedMainBtn(text: "Change image", onPressed: _pickImage),
-              const SizedBox(
-                width: 150,
+              SizedBox(
+                height: 20,
               ),
-              TextField(
+              SizedBox(
+                width: 250,
+                child: TextField(
                   decoration: InputDecoration(
-                    labelText: usernameTextField,
-                    border: const OutlineInputBorder(),
+                    labelText: "Username",
+                    border: OutlineInputBorder(),
                     focusColor: Colors.black,
                   ),
-                  keyboardType: TextInputType.emailAddress,
-                  onChanged: (value) {
-                    usernameTextField = value;
+                  controller: _usernameController,
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              SizedBox(
+                width: 250,
+                child: TextField(
+                  minLines: 3,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    labelText: "Description",
+                    border: OutlineInputBorder(),
+                    focusColor: Colors.black,
+                  ),
+                  controller: _descriptionController,
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              DottedMainBtn(
+                  text: "Save",
+                  onPressed: () async {
+                    user.username = _usernameController.text;
+                    user.description = _descriptionController.text;
+                    user.img = img;
+
+                    bool edited = await _userService.editUser(user);
+                    if (edited) {
+                      Navigator.pop(context, true);
+                    }
                   })
             ],
           ),

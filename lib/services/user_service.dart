@@ -40,7 +40,27 @@ class UserService {
     return user;
   }
 
-  Future<User?> loadUserInfo(BuildContext context) async {
+  Future<bool> editUser(User user) async {
+    bool modified = false;
+    final uri = Uri.parse("${API_URL}api/users");
+    final response = await http.put(uri,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(user.toJson()));
+
+    if (response.statusCode == 204) {
+      modified = true;
+      showToast("User info edited successfully");
+    } else if (response.body.isNotEmpty) {
+      final body = jsonDecode(response.body);
+      showToast(body['msg']);
+    } else {
+      showToast("Unexpected error with empty response.");
+    }
+
+    return modified;
+  }
+
+  Future<User?> loadUserInfo(BuildContext context, String? userId) async {
     final firebaseUser = FirebaseAuth.instance.currentUser;
 
     if (firebaseUser == null) {
@@ -50,7 +70,7 @@ class UserService {
     }
 
     try {
-      final result = await getUser(firebaseUser.uid);
+      final result = await getUser(userId ?? firebaseUser.uid);
       return result;
     } catch (e) {
       showToast("An error occurred: $e");
