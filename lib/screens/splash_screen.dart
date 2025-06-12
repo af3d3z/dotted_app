@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_app/custom/login_provider_btn.dart';
 import 'package:dotted_app/screens/google_signin.dart';
 import 'package:dotted_app/screens/home_screen.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:dotted_app/custom/google_sign_in.dart';
 import 'package:dotted_app/custom/button.dart';
@@ -39,40 +40,44 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _handleGoogleSignIn() async {
-    try {
-      final userCredentials = await GoogleAuthService().signInWithGoogle();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        final fcmToken = await FirebaseMessaging.instance.getToken();
+        final userCredentials = await GoogleAuthService().signInWithGoogle();
 
-      bool userExists = await GoogleAuthService()
-          .checkIfUserExists(userCredentials.user!.uid);
+        bool userExists = await GoogleAuthService()
+            .checkIfUserExists(userCredentials.user!.uid);
 
-      if (userExists) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
-        );
-      } else {
-        await FirebaseFirestore.instance
-            .collection("users")
-            .doc(userCredentials.user!.uid)
-            .set({
-          'uid': userCredentials.user!.uid,
-          'email': userCredentials.user!.email,
-        });
+        if (userExists) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeScreen()),
+          );
+        } else {
+          await FirebaseFirestore.instance
+              .collection("users")
+              .doc(userCredentials.user!.uid)
+              .set({
+            'uid': userCredentials.user!.uid,
+            'email': userCredentials.user!.email,
+            'fcmToken': fcmToken
+          });
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CompleteProfilePage(
-              email: userCredentials.user!.email!,
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CompleteProfilePage(
+                email: userCredentials.user!.email!,
+              ),
             ),
-          ),
-        );
+          );
+        }
+      } catch (e) {
+        setState(() {
+          err = e.toString();
+        });
       }
-    } catch (e) {
-      setState(() {
-        err = e.toString();
-      });
-    }
+    });
   }
 
   @override

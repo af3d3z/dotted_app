@@ -209,6 +209,7 @@ class _ProfileScreen extends State<ProfileScreen> {
                                 builder: (context) => PostTile(
                                   post: post,
                                   rootPost: true,
+                                  onPostAction: _loadPosts,
                                 ),
                               );
                             },

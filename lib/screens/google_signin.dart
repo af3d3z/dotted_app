@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:dotted_app/custom/button.dart';
 import 'package:dotted_app/custom/global.dart';
 import 'package:flutter/material.dart';

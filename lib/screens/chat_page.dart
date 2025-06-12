@@ -8,18 +8,42 @@ import 'package:dotted_app/services/chat_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as Firebase;
 import 'package:flutter/material.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   final User user;
 
+  const ChatPage({super.key, required this.user});
+
+  @override
+  State<ChatPage> createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final _auth = Firebase.FirebaseAuth.instance;
   final ChatService _chatService = ChatService();
 
-  ChatPage({super.key, required this.user});
+  String? _fcmToken;
+  late Future<String?> _fcmTokenFuture;
 
-  void sendMessage() async {
+  @override
+  void initState() {
+    super.initState();
+    _fcmTokenFuture = _chatService.getFcmToken(widget.user.id);
+  }
+
+  void _sendMessage() async {
+    _fcmToken ??= await _fcmTokenFuture;
+    print(_fcmToken);
+
     if (_messageController.text.isNotEmpty) {
-      await _chatService.sendMessage(user.id, _messageController.text);
+      await _chatService.sendMessage(widget.user.id, _messageController.text);
+
+      if (_fcmToken != null && _fcmToken!.isNotEmpty) {
+        await _chatService.sendNotification(
+            _fcmToken!, widget.user.username, _messageController.text);
+      } else {
+        print("Could not send notification");
+      }
 
       _messageController.clear();
     }
@@ -33,23 +57,20 @@ class ChatPage extends StatelessWidget {
         backgroundColor: Colors.white,
         toolbarHeight: 75,
         title: UserTile(
-            username: user.username,
-            img: user.img,
+            username: widget.user.username,
+            img: widget.user.img,
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => ProfileScreen(userId: user.id),
+                  builder: (_) => ProfileScreen(userId: widget.user.id),
                 ),
               );
             }),
       ),
       body: Column(
         children: [
-          //messages
           Expanded(child: _buildMessageList()),
-
-          //user input
           _buildUserInput(),
         ],
       ),
@@ -58,8 +79,8 @@ class ChatPage extends StatelessWidget {
 
   Widget _buildMessageList() {
     String senderID = _auth.currentUser!.uid;
-    return StreamBuilder(
-      stream: _chatService.getMessages(user.id, senderID),
+    return StreamBuilder<QuerySnapshot>(
+      stream: _chatService.getMessages(widget.user.id, senderID),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return const Text("Error");
@@ -75,18 +96,21 @@ class ChatPage extends StatelessWidget {
           );
         }
 
-        return ListView(
-          children:
-              snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
+        return ListView.builder(
+          itemCount: snapshot.data!.docs.length,
+          reverse: true,
+          itemBuilder: (context, index) {
+            DocumentSnapshot doc =
+                snapshot.data!.docs[snapshot.data!.docs.length - 1 - index];
+            return _buildMessageItem(doc);
+          },
         );
       },
     );
   }
 
-  // build message item
   Widget _buildMessageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
     // check if the sender is the current user
     bool isCurrentUser = data['senderID'] == _auth.currentUser!.uid;
 
@@ -134,7 +158,7 @@ class ChatPage extends StatelessWidget {
           ),
           const SizedBox(width: 15),
           IconButton(
-            onPressed: sendMessage,
+            onPressed: _sendMessage,
             icon: Icon(Icons.arrow_upward, color: Colors.white),
             style: IconButton.styleFrom(
               backgroundColor: Colors.black,

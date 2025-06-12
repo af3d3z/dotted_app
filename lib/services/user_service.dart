@@ -26,7 +26,6 @@ class UserService {
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
-      print("Response body: $body");
 
       if (body == null || body is! Map<String, dynamic>) {
         throw Exception("Invalid response format.");
@@ -40,6 +39,7 @@ class UserService {
     return user;
   }
 
+  // sends a request to the server to edit the user
   Future<bool> editUser(User user) async {
     bool modified = false;
     final uri = Uri.parse("${API_URL}api/users");
@@ -60,6 +60,7 @@ class UserService {
     return modified;
   }
 
+  // loads the user profile info
   Future<User?> loadUserInfo(BuildContext context, String? userId) async {
     final firebaseUser = FirebaseAuth.instance.currentUser;
 

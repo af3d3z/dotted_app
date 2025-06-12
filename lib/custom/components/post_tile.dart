@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:dotted_app/custom/components/video_player.dart';
 import 'package:dotted_app/models/post.dart';
+import 'package:dotted_app/services/post_service.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,8 +11,13 @@ import 'package:path_provider/path_provider.dart';
 class PostTile extends StatelessWidget {
   final Post post;
   final bool rootPost;
+  final VoidCallback? onPostAction;
 
-  const PostTile({super.key, required this.post, required this.rootPost});
+  const PostTile(
+      {super.key,
+      required this.post,
+      required this.rootPost,
+      this.onPostAction});
 
   Future<File> writeBlobToTempFile(Uint8List blob, String extension) async {
     final tempDir = await getTemporaryDirectory();
@@ -38,9 +44,9 @@ class PostTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final PostService postService = PostService();
     return GestureDetector(
       onTap: () {
-        print(post.postId);
         if (rootPost) {
           showGeneralDialog(
             context: context,
@@ -68,7 +74,67 @@ class PostTile extends StatelessWidget {
                         SizedBox(
                           width: 350,
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              TextEditingController editController =
+                                  TextEditingController(
+                                      text: getText(post.value!));
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext dialogContext) {
+                                  return AlertDialog(
+                                    backgroundColor: Colors.white,
+                                    title: const Text('Edit Post'),
+                                    content: TextField(
+                                      controller: editController,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Enter new post text',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      maxLines: 5,
+                                      keyboardType: TextInputType.multiline,
+                                    ),
+                                    actions: <Widget>[
+                                      TextButton(
+                                        style: ButtonStyle(
+                                            backgroundColor:
+                                                WidgetStateProperty.all(
+                                                    Colors.red)),
+                                        child: const Text(
+                                          'Cancel',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.of(dialogContext)
+                                              .pop(); // Dismiss the dialog
+                                        },
+                                      ),
+                                      ElevatedButton(
+                                        style: ButtonStyle(
+                                          backgroundColor:
+                                              WidgetStateProperty.all(
+                                                  Colors.lightGreen),
+                                        ),
+                                        child: const Text(
+                                          'Save',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        onPressed: () async {
+                                          String editText = editController.text;
+                                          await postService.editPost(
+                                              post.postId ?? 0, editText);
+                                          Navigator.of(dialogContext).pop();
+                                          Navigator.of(context).pop();
+
+                                          if (onPostAction != null) {
+                                            onPostAction!();
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.amber,
                               foregroundColor: Colors.white,
@@ -87,7 +153,68 @@ class PostTile extends StatelessWidget {
                       SizedBox(
                         width: 350,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () async {
+                            showDialog(
+                                context: context,
+                                builder: (BuildContext buildContext) {
+                                  return AlertDialog(
+                                    backgroundColor: Colors.white,
+                                    alignment: Alignment.center,
+                                    title: Text(
+                                        "Do you really want to delete this post?"),
+                                    actions: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          TextButton(
+                                            style: ButtonStyle(
+                                                backgroundColor:
+                                                    WidgetStateProperty.all(
+                                                        Colors.red)),
+                                            child: const Text(
+                                              'Cancel',
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                            onPressed: () {
+                                              Navigator.of(buildContext)
+                                                  .pop(); // Dismiss the dialog
+                                            },
+                                          ),
+                                          SizedBox(
+                                            width: 10,
+                                          ),
+                                          ElevatedButton(
+                                            style: ButtonStyle(
+                                              backgroundColor:
+                                                  WidgetStateProperty.all(
+                                                      Colors.lightGreen),
+                                            ),
+                                            child: const Text(
+                                              'Confirm',
+                                              style: TextStyle(
+                                                  color: Colors.white),
+                                            ),
+                                            onPressed: () async {
+                                              await postService
+                                                  .deletePost(post.postId ?? 0);
+                                              Navigator.of(buildContext).pop();
+                                              Navigator.of(context).pop();
+
+                                              if (onPostAction != null) {
+                                                onPostAction!();
+                                              }
+                                            },
+                                          ),
+                                        ],
+                                      )
+                                    ],
+                                  );
+                                });
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,

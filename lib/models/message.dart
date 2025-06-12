@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Message {
+  // i think everything is pretty clear here
   final String senderID;
   final String senderEmail;
   final String receiverID;

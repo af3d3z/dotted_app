@@ -18,6 +18,27 @@ class _CreateState extends State<ChatScreen> {
   final Firebase.FirebaseAuth _auth = Firebase.FirebaseAuth.instance;
   final ChatService _chatService = ChatService();
 
+  late Future<List<User>> _userList;
+
+  @override
+  void initState() {
+    super.initState();
+    _userList = _chatService.getUsers();
+    _checkUserAndNavigate();
+  }
+
+  void _checkUserAndNavigate() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final firebaseUser = _auth.currentUser;
+      if (firebaseUser == null) {
+        UserService.showToast("You are not logged in.");
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, 'splash_screen');
+        }
+      }
+    });
+  }
+
   Widget _buildUserListItem(User user, BuildContext context) {
     if (_auth.currentUser!.email != user.email) {
       return UserTile(
@@ -36,14 +57,8 @@ class _CreateState extends State<ChatScreen> {
   }
 
   Widget _buildUserList() {
-    final firebaseUser = Firebase.FirebaseAuth.instance.currentUser;
-
-    if (firebaseUser == null) {
-      UserService.showToast("You are not logged in.");
-      Navigator.pushReplacementNamed(context, 'splash_screen');
-    }
     return FutureBuilder(
-      future: _chatService.getUsers(),
+      future: _userList,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text("An error ocurred. Try again later...");

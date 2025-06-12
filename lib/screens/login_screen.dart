@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dotted_app/custom/global.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:dotted_app/custom/button.dart';
@@ -71,16 +72,18 @@ class _LoginState extends State<Login> {
                 text: "Login",
                 onPressed: () async {
                   try {
-                    final userCredential = await _auth
-                        .signInWithEmailAndPassword(
-                          email: email,
-                          password: password,
-                        );
+                    final userCredential =
+                        await _auth.signInWithEmailAndPassword(
+                      email: email,
+                      password: password,
+                    );
 
                     final user = userCredential.user;
 
                     if (user != null) {
                       final idToken = await user.getIdToken(true);
+                      final fcmToken =
+                          await FirebaseMessaging.instance.getToken();
                       String token = "Bearer $idToken";
                       var apiUrl = Uri.parse("${API_URL}api/store-user-data");
 
@@ -92,6 +95,7 @@ class _LoginState extends State<Login> {
                       _firestore.collection("users").doc(user.uid).set({
                         'uid': user.uid,
                         'email': user.email,
+                        'fcmToken': fcmToken
                       });
 
                       print(response.body);

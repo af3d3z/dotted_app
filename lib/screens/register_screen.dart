@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -55,8 +55,8 @@ class _RegisterState extends State<Register> {
       if (firebaseUser == null) throw Exception("Firebase user is null.");
 
       final compressedImg = await compressImage(_image);
+      final fcmToken = await FirebaseMessaging.instance.getToken();
 
-      // Send to API
       final response = await http.post(
         Uri.parse("${API_URL}api/users"),
         headers: {'Content-Type': 'application/json'},
@@ -79,6 +79,7 @@ class _RegisterState extends State<Register> {
         _firestore.collection("users").doc(userCredential.user!.uid).set({
           'uid': userCredential.user!.uid,
           'email': userCredential.user!.email,
+          'fcmToken': fcmToken
         });
 
         Navigator.pushReplacement(
@@ -117,8 +118,8 @@ class _RegisterState extends State<Register> {
               Align(
                 alignment: Alignment.topLeft,
                 child: BackButton(
-                  onPressed:
-                      () => Navigator.pushNamed(context, 'splash_screen'),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, 'splash_screen'),
                 ),
               ),
               const SizedBox(height: 40),

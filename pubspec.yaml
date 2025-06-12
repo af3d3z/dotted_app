@@ -47,6 +47,7 @@ dependencies:
   video_compress: ^3.1.4
   just_audio: ^0.10.3
   crypto: ^3.0.6
+  flutter_local_notifications: ^19.2.1
   flutter_image_compress: ^2.4.0
   firebase_messaging: ^15.2.5
   cloud_firestore: ^5.6.8

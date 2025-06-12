@@ -5,10 +5,15 @@ import 'dart:typed_data';
 enum MediaType { video, audio, text, image }
 
 class Post {
+  // post identifier
   final int? postId;
+  // id of the user the post belongs to
   final String userId;
+  // time of publication of the post
   final String? pubTime;
+  // type of the post
   final MediaType type;
+  // post payload
   final Uint8List? value;
 
   Post({

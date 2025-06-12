@@ -2,10 +2,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 class User {
+  // stores the user identifier
   final String id;
+  // stores the username
   String username;
+  // stores the email of the user
   final String email;
+  // stores a profile image
   Uint8List? img;
+  // stores the description of the profile
   String? description;
 
   User({
